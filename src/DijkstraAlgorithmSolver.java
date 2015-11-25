@@ -3,7 +3,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- *
+ *  created by David Matins on 11/22/15.
  */
 public class DijkstraAlgorithmSolver {
     private final List<Car> cars;
