@@ -1,0 +1,160 @@
+<!-- This is meant to represent and graph the possible car positions and the best outcome.
+The original file is based off of http://bl.ocks.org/mbostock/4062045 written by Mike Bostock
+
+*To run server in terminal from directory that contains the files
+python -m SimpleHTTPServer
+
+*To view visualization from server, go to http://localhost:8000/
+*Where 8000 is the port that the python server gives {Serving HTTP on 0.0.0.0 port 8000 ...}
+
+*To end server
+CRTL + c
+
+*alternatively if you are using intelliJ, you can right click on file and choose open in browser.
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    .node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+    }
+
+    .link {
+    stroke: #999;
+    stroke-opacity: .6;
+    }
+
+    .button {
+    background-color:CornflowerBlue;
+    border:2px solid CadetBlue;
+    border-radius: 15px;
+    padding: 10px;
+    cursor:pointer;
+    cursor:hand;
+    }
+
+    body {
+    font-family: Arial, Helvetica, sans-serif;
+    }
+
+</style>
+<body>
+<div id="updaterButton">
+    <input name="updateButton"
+           type="button"
+           value="Find Best Car Path"
+           onclick="updater(graphData)"
+           class="button"
+    />
+</div>
+<div id="pathdisplay">
+</div>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type = "text/javascript">
+
+var width = window.innerWidth - 100,
+    height = window.innerHeight - 100;
+
+var force = d3.layout.force()
+    .charge(-100)
+    .linkDistance(40)
+    .size([width, height]);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var updaterBeenClicked = false;
+
+var updater = function(graph){
+if(!updaterBeenClicked){
+  force.links(graph.links).start();
+  svg.selectAll(".node").style("fill", function(d) { return d.color; });
+
+ console.log(graph);
+ var widthPlacement = 20;
+ var heightPlacement = height/9;
+ var info = graph.info[0];
+
+ svg.append("text")
+.attr("transform", "translate("+widthPlacement+","+heightPlacement+")")
+.attr("dy", ".35em")
+.attr("text-anchor", "start")
+.style("fill", "CadetBlue")
+.text("Time: "+ info.time);
+
+svg.append("text")
+.attr("transform", "translate("+widthPlacement+","+(heightPlacement+25)+")")
+.attr("dy", ".35em")
+.attr("text-anchor", "start")
+.style("fill", "CadetBlue")
+.text("Distance Traveled: "+ info.distance);
+
+svg.append("text")
+.attr("transform", "translate("+widthPlacement+","+(heightPlacement+50)+")")
+.attr("dy", ".35em")
+.attr("text-anchor", "start")
+.style("fill", "CadetBlue")
+.text("Car Path: "+info.path[0].segment);
+
+var count = 1;
+info.path.forEach(function(e, index){
+if(index > 0){
+console.log(e);
+svg.append("text")
+.attr("transform", "translate("+widthPlacement+","+(heightPlacement+50+(count*25))+")")
+.attr("dy", ".35em")
+.attr("text-anchor", "start")
+.style("fill", "CadetBlue")
+.text(e.segment);
+count++;
+}
+});
+
+ updaterBeenClicked = true;
+}
+};
+var graphData;
+
+d3.json("carsTest.json", function(error, graph) {
+  if (error) throw error;
+
+graphData = graph;
+
+  force
+      .nodes(graph.nodes)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(graph.links)
+    .enter().append("line")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+  link.append("title").text(function(d) { return "Time needed: "+d.value; });
+
+  var node = svg.selectAll(".node")
+      .data(graph.nodes)
+    .enter().append("circle")
+      .attr("class", "node")
+      .attr("r", 7)
+      .style("fill", "LightSkyBlue")
+      .call(force.drag);
+
+  node.append("title").text(function(d) { return d.name; });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  });
+});
+
+</script>
